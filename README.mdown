@@ -1,0 +1,32 @@
+Color.py
+========
+
+There are many ways to create in instance of the `Color` class. Two ways include providing RGB values and providing a [hex triplet](https://en.wikipedia.org/wiki/Web_colors#Hex_triplet).
+
+    >>> Color(245, 16, 42)
+    Color(245, 16, 42)
+    >>> Color('45fe0b')
+    Color(69, 254, 11)
+    >>> Color('#87b3f0')
+    Color(135, 179, 240)
+
+However, the simplest way is to use the provided constants. Any color from the [SVG 1.0 color keyword names](http://www.w3.org/TR/SVG/types.html#ColorKeywords) is supported.
+
+    >>> Color.RED
+    Color(255, 0, 0)
+    >>> Color.DODGERBLUE
+    Color(30, 144, 255)
+    >>> Color.PAPAYAWHIP
+    Color(255, 239, 213)
+
+Any modifications to these constants only affect that particular instance as shown below.
+
+    >>> black = Color.BLACK
+    >>> black.red = 255
+    >>> black
+    Color(255, 0, 0)
+    >>> Color.BLACK
+    Color(0, 0, 0)
+    >>> Color.BLACK.red = 255
+    >>> Color.BLACK
+    Color(0, 0, 0)
