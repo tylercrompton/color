@@ -10,7 +10,7 @@ There are many ways to create in instance of the `Color` class; one of which is 
     >>> Color('#87b3f0')
     Color(135, 179, 240)
 
-However, the simplest way is to use the provided constants. Any color from the [SVG 1.0 color keyword names](http://www.w3.org/TR/SVG/types.html#ColorKeywords) is supported.
+However, the simplest way is to use the provided constants. Any color from the [SVG 1.1 color keyword names](http://www.w3.org/TR/SVG/types.html#ColorKeywords) is supported.
 
     >>> Color.RED
     Color(255, 0, 0)
