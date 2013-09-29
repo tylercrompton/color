@@ -1,7 +1,7 @@
 Color.py
 ========
 
-There are many ways to create in instance of the `Color` class; one of which is providing the [RGB value](http://www.w3.org/TR/css3-color/#rgb-color).
+There are many ways to create in instance of the `Color` class; one of which is to provide the [RGB value](http://www.w3.org/TR/css3-color/#rgb-color).
 
     >>> Color(245, 16, 42)
     Color(245, 16, 42)
@@ -19,7 +19,7 @@ However, the simplest way is to use the provided constants. Any color from the [
     >>> Color.PAPAYAWHIP
     Color(255, 239, 213)
 
-Any modifications to these constants only affect that particular instance as shown below.
+Modifications to these constants affect only that particular instance as demonstrated below.
 
     >>> black = Color.BLACK
     >>> black.red = 255
