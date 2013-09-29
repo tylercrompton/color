@@ -1,7 +1,7 @@
 Color.py
 ========
 
-There are many ways to create in instance of the `Color` class. Two ways include providing RGB values and providing a [hex triplet](https://en.wikipedia.org/wiki/Web_colors#Hex_triplet).
+There are many ways to create in instance of the `Color` class; one of which is providing the [RGB value](http://www.w3.org/TR/css3-color/#rgb-color).
 
     >>> Color(245, 16, 42)
     Color(245, 16, 42)
