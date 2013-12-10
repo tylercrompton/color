@@ -1,32 +1,34 @@
 Color.py
 ========
 
-There are many ways to create in instance of the `Color` class; one of which is to provide the [RGB value](http://www.w3.org/TR/css3-color/#rgb-color).
+There are many ways to create in instance of the `Color` class; one of which is to provide the [RGB value](http://www.w3.org/TR/css3-color/#rgb-color) and the number of bits required for its hexadecimal representation if the hexadecimal representation is not given.
 
     >>> Color(245, 16, 42)
-    Color(245, 16, 42)
+    Color(245, 16, 42, 24)
+    >>> Color(4, 187, 32, 24)
+    Color(4, 187, 32, 24)
     >>> Color('45fe0b')
-    Color(69, 254, 11)
+    Color(69, 254, 11, 24)
     >>> Color('#87b3f0')
-    Color(135, 179, 240)
+    Color(135, 179, 240, 24)
 
-However, the simplest way is to use the provided constants. Any color from the [SVG 1.1 color keyword names](http://www.w3.org/TR/SVG/types.html#ColorKeywords) is supported.
+However, the simplest way is to use the provided constants. Any color from the [SVG 1.1 color keyword names](http://www.w3.org/TR/SVG/types.html#ColorKeywords) with underscores separating words is supported.
 
     >>> Color.RED
-    Color(255, 0, 0)
-    >>> Color.DODGERBLUE
-    Color(30, 144, 255)
-    >>> Color.PAPAYAWHIP
-    Color(255, 239, 213)
+    Color(255, 0, 0, 24)
+    >>> Color.DODGER_BLUE
+    Color(30, 144, 255, 24)
+    >>> Color.PAPAYA_WHIP
+    Color(255, 239, 213, 24)
 
 Modifications to these constants affect only that particular instance as demonstrated below.
 
     >>> black = Color.BLACK
     >>> black.red = 255
     >>> black
-    Color(255, 0, 0)
+    Color(255, 0, 0, 24)
     >>> Color.BLACK
-    Color(0, 0, 0)
+    Color(0, 0, 0, 24)
     >>> Color.BLACK.red = 255
     >>> Color.BLACK
-    Color(0, 0, 0)
+    Color(0, 0, 0, 24)
