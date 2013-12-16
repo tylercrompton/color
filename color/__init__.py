@@ -4,7 +4,8 @@ The Color class provides nearly every thing one could want to do with colors.
 
 """
 
-from colorsys import hsv_to_rgb, rgb_to_hsv
+from collections import OrderedDict
+from colorsys import rgb_to_hsv
 
 __all__ = ('Color',)
 __author__ = 'Tyler Crompton'
@@ -17,84 +18,126 @@ class _classproperty(property):
         return self.fget.__get__(None, owner)(owner)
 
 
-class Color:
+def _validate_sample(value, depth):
+    if value < 0 or value >= 16 ** (depth / 4):
+        raise ValueError(
+            'Value must be within 0 to {}.'.format(16 ** (depth / 4) - 1))
+
+
+class Color(tuple):
     """A class to represent a color.
 
-    Valid color values are hexadecimal or RGB values.
+    Valid color values are hexadecimal or RGB values. If an RGB values is used,
+    the color depth can be optionally provided.
 
     Since this class is intended to be mutable, the class property "constants"
     return a new instance with each access.
 
+    In all honesty, this class is so hacky, that I discourage using this. I've
+    poured magic sauce on everything. Lasciate ogne speranza, voi ch'entrate.
+
     """
 
-    def __init__(self, *args):
+    __slots__ = ()
+
+    red = property(lambda self: tuple.__getitem__(self, 0),
+                   doc='Gets the red sample.')
+    green = property(lambda self: tuple.__getitem__(self, 1),
+                     doc='Gets the green sample.')
+    blue = property(lambda self: tuple.__getitem__(self, 2),
+                    doc='Gets the blue simple.')
+    depth = property(lambda self: tuple.__getitem__(self, 3),
+                     doc='Get the color depth.')
+
+    def __new__(cls, *args):
+        """Create new instance of Color(red, green, blue)"""
+
+        locals()['red'] = None
+        locals()['green'] = None
+        locals()['blue'] = None
+        locals()['depth'] = None
+
         if len(args) == 1:
-            value = args[0][1:] if args[0].startswith('#') else args[0]
+            try:
+                value = args[0][1:] if args[0].startswith('#') else args[0]
+            except AttributeError:
+                return tuple.__new__(cls, (args[0][0], args[0][1], args[0][2],
+                                           24))
             if len(value) % 3:
                 raise ValueError('Invalid number of characters')
             triplet_length = len(value) // 3
-            self._bits = len(value) * 3
-            self.red = int(value[:triplet_length], 16)
-            self.green = int(value[triplet_length:triplet_length * 2], 16)
-            self.blue = int(value[triplet_length * 2:triplet_length * 3], 16)
+            red = int(value[:triplet_length], 16)
+            green = int(value[triplet_length:triplet_length * 2], 16)
+            blue = int(value[triplet_length * 2:triplet_length * 3], 16)
+            depth = len(value) * 3
+        elif len(args) == 2:
+            if args[1] <= 0:
+                raise ValueError('The depth must be a positive integer.')
+            return tuple.__new__(cls, (args[0][0], args[0][1], args[0][2],
+                                       args[1]))
         elif len(args) == 3:
-            self._bits = 24
-            self.red, self.green, self.blue = args
+            red, green, blue = args
+            depth = 24
         else:
-            self._bits = args[3]
-            self.red, self.green, self.blue, self._bits = args
-            if self._bits <= 0 or self._bits % 12:
-                raise ValueError(
-                    'The number of bits must be divisible by twelve.')
+            red, green, blue, depth = args
+            if depth <= 0:
+                raise ValueError('The depth must be a positive integer.')
+
+        _validate_sample(red, depth / 3)
+        _validate_sample(green, depth / 3)
+        _validate_sample(blue, depth / 3)
+
+        return tuple.__new__(cls, (red, green, blue, depth))
 
     def __repr__(self):
         return 'Color({}, {}, {}, {})'.format(repr(self.red), repr(self.green),
                                               repr(self.blue),
-                                              repr(self._bits))
+                                              repr(self.depth))
+
+    @property
+    def __dict__(self):
+        """A new OrderedDict mapping field names to their values"""
+
+        return OrderedDict({
+            'blue': self.blue,
+            'green': self.green,
+            'red': self.red,
+        })
+
+    def __getitem__(self, item):
+        if item == 0 or item == -3:
+            return self.red
+        if item == 1 or item == -2:
+            return self.green
+        if item == 2 or item == -1:
+            return self.blue
+
+        raise IndexError('tuple index out of range')
+
+    def __iter__(self):
+        yield self[0]
+        yield self[1]
+        yield self[2]
+
+    def __getnewargs__(self):
+        """Return self as a plain tuple.  Used by copy and pickle."""
+
+        return tuple(self)
+
+    def __getstate__(self):
+        """Exclude the OrderedDict from pickling"""
+
+        return None
 
     @property
     def hex(self):
+        if self.depth % 12:
+            raise TypeError('The hexadecimal represention cannot be generated '
+                            'for colors with a non-duodecimal depth.')
+
+        # Yo, dawg.
         return '#{{:0{0}x}}{{:0{0}x}}{{:0{0}x}}'.format(
-            self._bits // 12).format(self.red, self.green, self.blue)
-
-    @property
-    def red(self):
-        return self._red
-
-    # noinspection PyAttributeOutsideInit
-    @red.setter
-    def red(self, value):
-        if 0 <= value <= 16 ** (self._bits // 12) - 1:
-            self._red = value
-        else:
-            raise ValueError('Value must be within 0 to {}.'.format(
-                16 ** (self._bits // 12) - 1))
-
-    @property
-    def green(self):
-        return self._green
-
-    # noinspection PyAttributeOutsideInit
-    @green.setter
-    def green(self, value):
-        if 0 <= value <= 16 ** (self._bits // 12) - 1:
-            self._green = value
-        else:
-            raise ValueError('Value must be within 0 to {}.'.format(
-                16 ** (self._bits // 12) - 1))
-
-    @property
-    def blue(self):
-        return self._blue
-
-    # noinspection PyAttributeOutsideInit
-    @blue.setter
-    def blue(self, value):
-        if 0 <= value <= 16 ** (self._bits // 12) - 1:
-            self._blue = value
-        else:
-            raise ValueError('Value must be within 0 to {}.'.format(
-                16 ** (self._bits // 12) - 1))
+            self.depth // 12).format(self.red, self.green, self.blue)
 
     @property
     def rgb(self):
@@ -102,58 +145,19 @@ class Color:
 
     @property
     def hue(self):
-        return rgb_to_hsv(self.red, self.green, self.blue)[0] * 360
-
-    @hue.setter
-    def hue(self, value):
-        value %= 360
-        if value < 0:
-            value += 360 * abs(value // 360)
-
-        hsv = rgb_to_hsv(self.red, self.green, self.blue)
-        rgb = hsv_to_rgb(value / 360, hsv[1], hsv[2])
-        self.red = rgb[0]
-        self.green = rgb[1]
-        self.blue = rgb[2]
+        return rgb_to_hsv(self.red, self.green, self.blue)[0]
 
     @property
     def saturation(self):
-        return rgb_to_hsv(self.red, self.green, self.blue)[1] * 100
-
-    @saturation.setter
-    def saturation(self, saturation):
-        if saturation < 0 or saturation > 100:
-            raise ValueError('Saturation must be within 0 and 100 (inclusive)')
-
-        hsv = rgb_to_hsv(self.red, self.green, self.blue)
-        rgb = hsv_to_rgb(hsv[0], saturation / 100, hsv[2])
-        self.red = rgb[0]
-        self.green = rgb[1]
-        self.blue = rgb[2]
+        return rgb_to_hsv(self.red, self.green, self.blue)[1]
 
     @property
     def value(self):
-        return rgb_to_hsv(self.red, self.green, self.blue)[2] * 100 / 16 ** (
-            self._bits // 12) - 1
-
-    # noinspection PyAttributeOutsideInit
-    @value.setter
-    def value(self, value):
-        if value < 0 or value > 100:
-            raise ValueError('Value must be within 0 and 100 (inclusive)')
-
-        hsv = rgb_to_hsv(self._red, self._green, self._blue)
-        rgb = hsv_to_rgb(hsv[0], hsv[1],
-                         value * (16 ** (self._bits // 12) - 1) // 100)
-        self._red = rgb[0]
-        self._green = rgb[1]
-        self._blue = rgb[2]
+        return rgb_to_hsv(self.red, self.green, self.blue)[2]
 
     @property
     def hsv(self):
-        hsv = rgb_to_hsv(self._red, self._green, self._blue)
-        return hsv[0] * 360, hsv[1] * 100, hsv[2] * 100 / 16 ** (
-            self._bits // 12) - 1
+        return rgb_to_hsv(self.red, self.green, self.blue)
 
     # noinspection PyPep8Naming,PyMethodParameters,PyCallingNonCallable
     @_classproperty
@@ -889,3 +893,36 @@ class Color:
     @_classproperty
     def YELLOW_GREEN(cls):
         return cls(154, 205, 50)
+
+    def __contains__(self, item):
+        return NotImplemented
+
+    def __add__(self, other):
+        return NotImplemented
+
+    def __sub__(self, other):
+        return NotImplemented
+
+    def __mul__(self, other):
+        return NotImplemented
+
+    def __le__(self, other):
+        return NotImplemented
+
+    def __lt__(self, other):
+        return NotImplemented
+
+    def __gt__(self, other):
+        return NotImplemented
+
+    def __ge__(self, other):
+        return NotImplemented
+
+    def __rmul__(self, other):
+        return NotImplemented
+
+    def count(self, value):
+        return NotImplemented
+
+    def index(self, value, start=None, stop=None):
+        return NotImplemented
